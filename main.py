@@ -215,6 +215,117 @@ def calculate_comparison_layout(arrangements_dict):
     return cols, rows, ax_width, ax_height, x_spacing, y_spacing
 
 
+def create_responsive_comparison_view(cards, r):
+    """
+    Create a responsive grid showing all arrangement types that scales with the window size
+    """
+    types = [
+        "Permutation (No Repetition)",
+        "Permutation (With Repetition)",
+        "Combination (No Repetition)",
+        "Combination (With Repetition)"
+    ]
+
+    arrangements_dict = {
+        "Permutation (No Repetition)": list(itertools.permutations(cards, r)),
+        "Permutation (With Repetition)": list(itertools.product(cards, repeat=r)),
+        "Combination (No Repetition)": list(itertools.combinations(cards, r)),
+        "Combination (With Repetition)": list(itertools.combinations_with_replacement(cards, r))
+    }
+
+    st.write(f"### Comparison of All Arrangement Types (n={len(cards)}, r={r})")
+
+    # Create a 2x2 grid using Streamlit columns
+    row1_cols = st.columns(2)
+    row2_cols = st.columns(2)
+
+    # Helper function to create card visualization
+    def create_arrangement_display(arrangements, container, title):
+        with container:
+            st.write(f"#### {title}")
+            st.write(f"Total arrangements: {len(arrangements)}")
+
+            # Create figure with dynamic sizing based on number of arrangements
+            n_arrangements = len(arrangements)
+            cols = min(4, n_arrangements)
+            rows = math.ceil(n_arrangements / cols)
+
+            # Calculate figure size based on content
+            width = min(12, cols * 3)
+            height = min(12, rows * 2.5)
+
+            fig = plt.figure(figsize=(width, height))
+
+            for idx, arrangement in enumerate(arrangements):
+                ax = fig.add_subplot(rows, cols, idx + 1)
+
+                # Scale card size based on number of cards
+                card_width = 0.7 / max(len(arrangement), 3)
+                card_spacing = card_width * 1.2
+                total_width = card_spacing * (len(arrangement) - 1)
+
+                # Set axis limits with margins
+                margin = card_width
+                ax.set_xlim(-total_width / 2 - margin, total_width / 2 + margin)
+                ax.set_ylim(-0.2, 1.2)
+                ax.axis('off')
+
+                # Draw cards
+                start_x = -total_width / 2
+                for i, card in enumerate(arrangement):
+                    create_card_patch(ax, card,
+                                      start_x + i * card_spacing,
+                                      0.2,
+                                      width=card_width,
+                                      height=card_width * 1.4)
+
+                ax.set_title(f"#{idx + 1}", fontsize=8, pad=2)
+
+            plt.tight_layout()
+            st.pyplot(fig)
+            plt.close()
+
+    # Display each arrangement type in its quadrant
+    for i, (type_name, arrangements) in enumerate(arrangements_dict.items()):
+        if i < 2:
+            create_arrangement_display(arrangements, row1_cols[i], type_name)
+        else:
+            create_arrangement_display(arrangements, row2_cols[i - 2], type_name)
+
+    # Add explanation and formulas
+    st.write("### Key Formulas")
+
+    formulas = {
+        "Permutation (No Repetition)": {
+            "formula": f"P({len(cards)},{r}) = {len(cards)}!/{(len(cards) - r)}!",
+            "result": math.perm(len(cards), r)
+        },
+        "Permutation (With Repetition)": {
+            "formula": f"{len(cards)}^{r}",
+            "result": len(cards) ** r
+        },
+        "Combination (No Repetition)": {
+            "formula": f"C({len(cards)},{r}) = {len(cards)}!/({r}!*{len(cards) - r}!)",
+            "result": math.comb(len(cards), r)
+        },
+        "Combination (With Repetition)": {
+            "formula": f"C({len(cards) + r - 1},{r})",
+            "result": math.comb(len(cards) + r - 1, r)
+        }
+    }
+
+    # Create formula comparison using Streamlit columns
+    formula_cols = st.columns(2)
+
+    for i, (type_name, formula_data) in enumerate(formulas.items()):
+        col = formula_cols[i % 2]
+        with col:
+            st.write(f"**{type_name}**")
+            st.latex(formula_data["formula"] + f" = {formula_data['result']}")
+
+    return arrangements_dict
+
+
 def create_comparison_view(cards, r):
     """Create a grid showing all four types of arrangements side by side with dynamic scaling"""
     types = [
@@ -337,33 +448,77 @@ def create_comparison_view(cards, r):
 
 
 def main():
+    st.set_page_config(layout="wide", page_title="Card Arrangement Visualizer")
+
     st.title("Dynamic Card Arrangement Visualizer")
 
-    # Create tabs
+    # Custom CSS for card display
+    st.markdown("""
+        <style>
+        .card-display {
+            padding: 15px;
+            background-color: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 24px;
+            font-family: monospace;
+            letter-spacing: 5px;
+        }
+        .red-card {
+            color: #d32f2f;
+        }
+        .black-card {
+            color: #2f2f2f;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     tab1, tab2 = st.tabs(["Individual Analysis", "Compare All Types"])
 
     with tab1:
-        # Input controls for individual analysis
+        st.header("Analyze Individual Arrangement Type")
+
         col1, col2, col3 = st.columns(3)
         with col1:
-            n = st.number_input("Number of Cards (n)", min_value=2, max_value=4, value=3, key="n1")
+            n = st.number_input("Number of Cards (n)",
+                                min_value=2,
+                                max_value=4,
+                                value=3,
+                                key="n1",
+                                help="Select the total number of cards to use")
         with col2:
-            r = st.number_input("Positions to Fill (r)", min_value=1, max_value=n, value=2, key="r1")
+            r = st.number_input("Positions to Fill (r)",
+                                min_value=1,
+                                max_value=n,
+                                value=2,
+                                key="r1",
+                                help="Select how many positions to fill")
         with col3:
             selection_type = st.selectbox(
                 "Select Arrangement Type",
                 ["Permutation (No Repetition)",
                  "Permutation (With Repetition)",
                  "Combination (No Repetition)",
-                 "Combination (With Repetition)"]
+                 "Combination (With Repetition)"],
+                help="Choose the type of arrangement to analyze"
             )
 
-        # Create deck with n cards
+        # Create deck and format cards with proper coloring
         cards = create_deck(n)
 
-        # Display card info
         st.write("### Available Cards")
-        st.write(" ".join(str(card) for card in cards))
+        # Create colored card display
+        card_html = ""
+        for card in cards:
+            color_class = "red-card" if card.suit in ['♥', '♦'] else "black-card"
+            card_html += f'<span class="{color_class}">{str(card)} </span>'
+
+        st.markdown(f"""
+        <div class="card-display">
+            {card_html}
+        </div>
+        """, unsafe_allow_html=True)
 
         # Calculate and display theoretical total
         total = 0
@@ -375,89 +530,108 @@ def main():
             formula = f"{n}^{r}"
         elif selection_type == "Combination (No Repetition)":
             total = math.comb(n, r)
-            formula = f"C({n},{r}) = {n}!/({r}!({n - r})!)"
+            formula = f"C({n},{r}) = {n}!/({r}!*{n - r}!)"
         else:
             total = math.comb(n + r - 1, r)
-            formula = f"C({n + r - 1},{r}) = ({n + r - 1})!/({r}!({n + r - 1 - r})!)"
+            formula = f"C({n + r - 1},{r}) = ({n + r - 1})!/({r}!*{n + r - 1 - r}!)"
 
-        st.write(f"### Total Possible Arrangements: {total}")
-        st.latex(formula + f" = {total}")
-
-        # Animation controls
-        speed = st.slider("Animation Speed", min_value=1, max_value=5, value=3)
-        delay = 0.2 / speed
-
-        if st.button("Start Animation"):
-            arrangements = animate_card_selection(cards, r, selection_type, delay)
-
-            # Display grid of all arrangements
-            st.header("All Possible Arrangements")
-            grid_fig = create_grid_display(arrangements, selection_type)
-            st.pyplot(grid_fig)
-            plt.close()
-
-    with tab2:
-        st.header("Compare All Types")
-
-        # Input controls for comparison
         col1, col2 = st.columns(2)
         with col1:
-            n_compare = st.number_input("Number of Cards (n)", min_value=2, max_value=4, value=3, key="n2")
+            st.write("### Formula")
+            st.latex(formula)
         with col2:
-            r_compare = st.number_input("Positions to Fill (r)", min_value=1, max_value=n_compare, value=2, key="r2")
+            st.write("### Total Possible Arrangements")
+            st.markdown(f"<h2 style='text-align: center;'>{total}</h2>", unsafe_allow_html=True)
 
-        # Create deck for comparison
-        cards_compare = create_deck(n_compare)
+        st.write("### Animation Controls")
+        col1, col2 = st.columns(2)
+        with col1:
+            speed = st.slider("Animation Speed",
+                              min_value=1,
+                              max_value=5,
+                              value=3,
+                              help="Adjust the speed of the animation")
+        with col2:
+            start_button = st.button("Start Animation",
+                                     help="Click to start the arrangement animation")
 
-        st.write(f"""
-        This view shows all four types of arrangements side by side for n={n_compare} and r={r_compare}.
-        Notice the differences in:
-        - Number of possible arrangements
-        - Order significance
-        - Repetition patterns
+        delay = 0.2 / speed
+
+        if start_button:
+            with st.spinner("Generating arrangements..."):
+                arrangements = animate_card_selection(cards, r, selection_type, delay)
+
+            st.header("All Possible Arrangements")
+            with st.spinner("Creating visualization..."):
+                grid_fig = create_grid_display(arrangements, selection_type)
+                st.pyplot(grid_fig)
+                plt.close()
+
+    with tab2:
+        st.header("Compare All Arrangement Types")
+
+        st.markdown("""
+        This view allows you to compare all four types of card arrangements side by side:
+        - **Permutations vs Combinations**
+        - **With vs Without Repetition**
+
+        Adjust the parameters below to explore different scenarios.
         """)
 
-        if st.button("Show Comparison", key="compare"):
-            comparison_fig = create_comparison_view(cards_compare, r_compare)
-            st.pyplot(comparison_fig)
-            plt.close()
+        col1, col2 = st.columns(2)
+        with col1:
+            n_compare = st.number_input("Number of Cards (n)",
+                                        min_value=2,
+                                        max_value=4,
+                                        value=3,
+                                        key="n2",
+                                        help="Select the total number of cards to use")
+        with col2:
+            r_compare = st.number_input("Positions to Fill (r)",
+                                        min_value=1,
+                                        max_value=n_compare,
+                                        value=2,
+                                        key="r2",
+                                        help="Select how many positions to fill")
 
-            st.header("Key Observations")
+        cards_compare = create_deck(n_compare)
 
-            col1, col2 = st.columns(2)
+        st.write("### Available Cards for Comparison")
+        # Create colored card display for comparison view
+        card_html = ""
+        for card in cards_compare:
+            color_class = "red-card" if card.suit in ['♥', '♦'] else "black-card"
+            card_html += f'<span class="{color_class}">{str(card)} </span>'
 
-            with col1:
-                st.write("""
-                **Permutations vs Combinations:**
-                - Permutations (top row) have more arrangements because order matters
-                - Combinations (bottom row) group arrangements that use the same cards
-                """)
+        st.markdown(f"""
+        <div class="card-display">
+            {card_html}
+        </div>
+        """, unsafe_allow_html=True)
 
-            with col2:
-                st.write("""
-                **With vs Without Repetition:**
-                - Right column allows repeated cards
-                - Left column uses each card only once
-                """)
+        if st.button("Generate Comparison", key="compare"):
+            with st.spinner("Creating comparison view..."):
+                arrangements_dict = create_responsive_comparison_view(cards_compare, r_compare)
 
-            # Dynamic formula comparison table
-            st.header("Formula Comparison")
-            perm_no_rep = math.perm(n_compare, r_compare)
-            perm_with_rep = n_compare ** r_compare
-            comb_no_rep = math.comb(n_compare, r_compare)
-            comb_with_rep = math.comb(n_compare + r_compare - 1, r_compare)
+        with st.expander("Need Help Understanding the Comparisons?"):
+            st.markdown("""
+            ### Understanding the Different Types
 
-            formula_data = {
-                "Type": ["P(n,r)", "n^r", "C(n,r)", "C(n+r-1,r)"],
-                "Formula": [
-                    f"{n_compare}!/{(n_compare - r_compare)}!",
-                    f"{n_compare}^{r_compare}",
-                    f"{n_compare}!/({r_compare}!({n_compare - r_compare})!)",
-                    f"({n_compare + r_compare - 1})!/({r_compare}!({n_compare + r_compare - 1 - r_compare})!)"
-                ],
-                "Result": [str(perm_no_rep), str(perm_with_rep), str(comb_no_rep), str(comb_with_rep)]
-            }
-            st.table(formula_data)
+            **Permutations (Top Row)**
+            - Order matters (ABC ≠ CBA)
+            - Left: No repetition allowed
+            - Right: Repetition allowed
+
+            **Combinations (Bottom Row)**
+            - Order doesn't matter (ABC = CBA)
+            - Left: No repetition allowed
+            - Right: Repetition allowed
+
+            ### Tips
+            - Start with small numbers (n=2, r=2) to understand the patterns
+            - Compare the number of arrangements across different types
+            - Notice how allowing repetition affects the total number of possibilities
+            """)
 
 
 if __name__ == "__main__":
