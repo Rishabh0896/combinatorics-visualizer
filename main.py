@@ -402,7 +402,7 @@ def main():
         # Input controls for comparison
         col1, col2 = st.columns(2)
         with col1:
-            n_compare = st.number_input("Number of Cards (n)", min_value=2, max_value=13, value=3, key="n2")
+            n_compare = st.number_input("Number of Cards (n)", min_value=2, max_value=4, value=3, key="n2")
         with col2:
             r_compare = st.number_input("Positions to Fill (r)", min_value=1, max_value=n_compare, value=2, key="r2")
 
