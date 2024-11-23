@@ -297,19 +297,19 @@ def create_responsive_comparison_view(cards, r):
 
     formulas = {
         "Permutation (No Repetition)": {
-            "formula": f"P({len(cards)},{r}) = {len(cards)}!/{(len(cards) - r)}!",
+            "formula": f"P(n,r) = P({len(cards)},{r}) = {len(cards)}!/{(len(cards) - r)}!",
             "result": math.perm(len(cards), r)
         },
         "Permutation (With Repetition)": {
-            "formula": f"{len(cards)}^{r}",
+            "formula": f"n^r = {len(cards)}^{r}",
             "result": len(cards) ** r
         },
         "Combination (No Repetition)": {
-            "formula": f"C({len(cards)},{r}) = {len(cards)}!/({r}!*{len(cards) - r}!)",
+            "formula": f"C(n,r) = C({len(cards)},{r}) = {len(cards)}!/({r}!*{len(cards) - r}!)",
             "result": math.comb(len(cards), r)
         },
-        "Combination (With Repetition)": {
-            "formula": f"C({len(cards) + r - 1},{r})",
+        "Combination (With Repetition) - Balls and Bins": {
+            "formula": f"C(balls + bins - 1, bins - 1) = C({len(cards) + r - 1},{r})",
             "result": math.comb(len(cards) + r - 1, r)
         }
     }
@@ -500,7 +500,7 @@ def main():
                 ["Permutation (No Repetition)",
                  "Permutation (With Repetition)",
                  "Combination (No Repetition)",
-                 "Combination (With Repetition)"],
+                 "Combination (With Repetition) - Balls and Bins"],
                 help="Choose the type of arrangement to analyze"
             )
 
@@ -544,22 +544,12 @@ def main():
             st.markdown(f"<h2 style='text-align: center;'>{total}</h2>", unsafe_allow_html=True)
 
         st.write("### Animation Controls")
-        col1, col2 = st.columns(2)
-        with col1:
-            speed = st.slider("Animation Speed",
-                              min_value=1,
-                              max_value=5,
-                              value=3,
-                              help="Adjust the speed of the animation")
-        with col2:
-            start_button = st.button("Start Animation",
-                                     help="Click to start the arrangement animation")
-
-        delay = 0.2 / speed
+        start_button = st.button("Start Animation",
+                                 help="Click to start the arrangement animation", type="secondary")
 
         if start_button:
             with st.spinner("Generating arrangements..."):
-                arrangements = animate_card_selection(cards, r, selection_type, delay)
+                arrangements = animate_card_selection(cards, r, selection_type)
 
             st.header("All Possible Arrangements")
             with st.spinner("Creating visualization..."):
@@ -607,9 +597,13 @@ def main():
         <div class="card-display">
             {card_html}
         </div>
+        <br/>
         """, unsafe_allow_html=True)
 
-        if st.button("Generate Comparison", key="compare"):
+        start_button = st.button("Generate Comparison",
+                                 key="compare", type="secondary")
+
+        if start_button:
             with st.spinner("Creating comparison view..."):
                 arrangements_dict = create_responsive_comparison_view(cards_compare, r_compare)
 
