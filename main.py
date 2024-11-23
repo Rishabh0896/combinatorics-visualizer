@@ -346,7 +346,7 @@ def main():
         # Input controls for individual analysis
         col1, col2, col3 = st.columns(3)
         with col1:
-            n = st.number_input("Number of Cards (n)", min_value=2, max_value=13, value=3, key="n1")
+            n = st.number_input("Number of Cards (n)", min_value=2, max_value=4, value=3, key="n1")
         with col2:
             r = st.number_input("Positions to Fill (r)", min_value=1, max_value=n, value=2, key="r1")
         with col3:
