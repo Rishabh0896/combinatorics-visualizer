@@ -149,42 +149,78 @@ def animate_card_selection(cards, r, selection_type, delay=0.2):
     for arr_idx, arrangement in enumerate(arrangements):
         progress_bar.progress((arr_idx + 1) / len(arrangements))
 
-        # Animation for each card in the arrangement
-        for i, card in enumerate(arrangement):
-            for y in linspace(2, 0.5, 3):
+        # For combinations, show all cards falling together
+        if "Combination" in selection_type:
+            # Animate falling motion for all cards together
+            for y in linspace(2, 0.5, 5):  # Increased steps for smoother fall
                 ax2.clear()
                 ax2.set_xlim(-(r * 0.7) / 2 - 0.5, (r * 0.7) / 2 + 0.5)
                 ax2.set_ylim(0, 2)
                 ax2.axis('off')
                 ax2.set_title(f"Arrangement {arr_idx + 1} of {len(arrangements)}")
 
-                # Show previously placed cards
+                # Show all cards at current height
                 start_x_arr = -(r * 0.7) / 2
-                for j in range(i):
-                    create_card_patch(ax2, arrangement[j], start_x_arr + j * 0.7, 0.5)
-
-                # Show current card being placed
-                create_card_patch(ax2, card, start_x_arr + i * 0.7, y)
+                for i, card in enumerate(arrangement):
+                    create_card_patch(ax2, card, start_x_arr + i * 0.7, y)
 
                 plot_container.pyplot(fig)
                 plt.close()
-                time.sleep(0.01)
+                time.sleep(0.05)  # Slowed down the fall animation
 
-        # Show final arrangement
-        ax2.clear()
-        ax2.set_xlim(-(r * 0.7) / 2 - 0.5, (r * 0.7) / 2 + 0.5)
-        ax2.set_ylim(0, 2)
-        ax2.axis('off')
-        ax2.set_title(f"Arrangement {arr_idx + 1} of {len(arrangements)}")
+            # Show final arrangement
+            ax2.clear()
+            ax2.set_xlim(-(r * 0.7) / 2 - 0.5, (r * 0.7) / 2 + 0.5)
+            ax2.set_ylim(0, 2)
+            ax2.axis('off')
+            ax2.set_title(f"Arrangement {arr_idx + 1} of {len(arrangements)}")
 
-        start_x_arr = -(r * 0.7) / 2
-        for i, card in enumerate(arrangement):
-            create_card_patch(ax2, card, start_x_arr + i * 0.7, 0.5)
+            start_x_arr = -(r * 0.7) / 2
+            for i, card in enumerate(arrangement):
+                create_card_patch(ax2, card, start_x_arr + i * 0.7, 0.5)
 
-        plot_container.pyplot(fig)
-        plt.close()
-        info_container.write(f"Arrangement {arr_idx + 1}: {' '.join(str(card) for card in arrangement)}")
-        time.sleep(delay)
+            plot_container.pyplot(fig)
+            plt.close()
+            info_container.write(f"Arrangement {arr_idx + 1}: {' '.join(str(card) for card in arrangement)}")
+            time.sleep(delay)  # Pause between arrangements
+
+        else:
+            # Original permutation animation (one by one)
+            for i, card in enumerate(arrangement):
+                for y in linspace(2, 0.5, 3):
+                    ax2.clear()
+                    ax2.set_xlim(-(r * 0.7) / 2 - 0.5, (r * 0.7) / 2 + 0.5)
+                    ax2.set_ylim(0, 2)
+                    ax2.axis('off')
+                    ax2.set_title(f"Arrangement {arr_idx + 1} of {len(arrangements)}")
+
+                    # Show previously placed cards
+                    start_x_arr = -(r * 0.7) / 2
+                    for j in range(i):
+                        create_card_patch(ax2, arrangement[j], start_x_arr + j * 0.7, 0.5)
+
+                    # Show current card being placed
+                    create_card_patch(ax2, card, start_x_arr + i * 0.7, y)
+
+                    plot_container.pyplot(fig)
+                    plt.close()
+                    time.sleep(0.01)
+
+            # Show final arrangement
+            ax2.clear()
+            ax2.set_xlim(-(r * 0.7) / 2 - 0.5, (r * 0.7) / 2 + 0.5)
+            ax2.set_ylim(0, 2)
+            ax2.axis('off')
+            ax2.set_title(f"Arrangement {arr_idx + 1} of {len(arrangements)}")
+
+            start_x_arr = -(r * 0.7) / 2
+            for i, card in enumerate(arrangement):
+                create_card_patch(ax2, card, start_x_arr + i * 0.7, 0.5)
+
+            plot_container.pyplot(fig)
+            plt.close()
+            info_container.write(f"Arrangement {arr_idx + 1}: {' '.join(str(card) for card in arrangement)}")
+            time.sleep(delay)
 
     return arrangements
 
@@ -452,27 +488,46 @@ def main():
 
     st.title("Dynamic Card Arrangement Visualizer")
 
-    # Custom CSS for card display
     st.markdown("""
-        <style>
-        .card-display {
-            padding: 15px;
-            background-color: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 24px;
-            font-family: monospace;
-            letter-spacing: 5px;
-        }
-        .red-card {
-            color: #d32f2f;
-        }
-        .black-card {
-            color: #2f2f2f;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+            <style>
+            .card-display {
+                padding: 15px;
+                background-color: white;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                text-align: center;
+                font-size: 24px;
+                font-family: monospace;
+                letter-spacing: 5px;
+            }
+            .deck-info {
+                padding: 8px;
+                margin: 8px 0;
+                border-radius: 4px;
+                color: #1a1a1a;
+                font-size: 16px;
+                background-color: #e3f2fd;  /* Light blue background */
+                border-left: 4px solid #1976d2;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);  /* Subtle shadow */
+            }
+            .infinity-symbol {
+                font-size: 28px;
+                margin-left: 10px;
+                color: #1976d2;
+                font-weight: bold;
+            }
+            .infinite-deck-info {
+                background-color: #e3f2fd;  /* Lighter blue background */
+                border-left: 4px solid #1976d2;
+            }
+            .finite-deck-info {
+                background-color: #fff3e0;  /* Lighter orange background */
+                border-left: 4px solid #f57c00;
+            }
+            .red-card { color: #d32f2f; }
+            .black-card { color: #2f2f2f; }
+            </style>
+        """, unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Individual Analysis", "Compare All Types"])
 
@@ -504,11 +559,24 @@ def main():
                 help="Choose the type of arrangement to analyze"
             )
 
-        # Create deck and format cards with proper coloring
+        # Create deck and display deck type information
         cards = create_deck(n)
 
+        is_infinite = selection_type in ("Permutation (With Repetition)", "Combination (With Repetition) - Balls and "
+                                                                          "Bins")
+
+        if is_infinite:
+            st.markdown("""
+                    <div class="deck-info">
+                        <div class="note-text">
+                            <strong>📝 Important Note:</strong> In arrangements with repetition, we draw from an 
+                            infinite deck i.e. we have infinitely many cards of the below kind 
+                            <span class="infinity-symbol">∞</span>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
         st.write("### Available Cards")
-        # Create colored card display
         card_html = ""
         for card in cards:
             color_class = "red-card" if card.suit in ['♥', '♦'] else "black-card"
@@ -516,7 +584,7 @@ def main():
 
         st.markdown(f"""
         <div class="card-display">
-            {card_html}
+            {card_html}<span class="infinity-symbol">{" ∞" if is_infinite else ""}</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -524,24 +592,49 @@ def main():
         total = 0
         if selection_type == "Permutation (No Repetition)":
             total = math.perm(n, r)
-            formula = f"P({n},{r}) = {n}!/{(n - r)}!"
+            formula = f"P(n,r) = P({n},{r}) = {n}!/{(n - r)}!"
+            explanation = """
+                **Permutation without repetition**
+                - Order matters (ABC ≠ CBA)
+                - Each card can be used only once
+                - Drawing from finite deck of 52 cards
+            """
         elif selection_type == "Permutation (With Repetition)":
             total = n ** r
-            formula = f"{n}^{r}"
+            formula = f"n^r = {n}^{r}"
+            explanation = """
+                **Permutation with repetition**
+                - Order matters (ABC ≠ CBA)
+                - Cards can be used multiple times
+                - Drawing from infinite deck
+            """
         elif selection_type == "Combination (No Repetition)":
             total = math.comb(n, r)
-            formula = f"C({n},{r}) = {n}!/({r}!*{n - r}!)"
+            formula = f"C(n,r) = C({n},{r}) = {n}!/({r}!*{n - r}!)"
+            explanation = """
+                **Combination without repetition**
+                - Order doesn't matter (ABC = CBA)
+                - Each card can be used only once
+                - Drawing from finite deck of 52 cards
+            """
         else:
             total = math.comb(n + r - 1, r)
-            formula = f"C({n + r - 1},{r}) = ({n + r - 1})!/({r}!*{n + r - 1 - r}!)"
+            formula = f"C(balls + bins - 1, bins - 1) = C({n + r - 1},{r}) = ({n + r - 1})!/({r}!*{n + r - 1 - r}!)"
+            explanation = """
+                **Combination with repetition (Balls and Bins)**
+                - Order doesn't matter (ABC = CBA)
+                - Cards can be used multiple times
+                - Drawing from infinite deck
+            """
 
         col1, col2 = st.columns(2)
         with col1:
             st.write("### Formula")
             st.latex(formula)
+            st.markdown(explanation)
         with col2:
             st.write("### Total Possible Arrangements")
-            st.markdown(f"<h2 style='text-align: center;'>{total}</h2>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align: center;'>{total}</h2>", unsafe_allow_html=True)
 
         st.write("### Animation Controls")
         start_button = st.button("Start Animation",
@@ -561,9 +654,9 @@ def main():
         st.header("Compare All Arrangement Types")
 
         st.markdown("""
-        This view allows you to compare all four types of card arrangements side by side:
+        This view allows you to compare all types of card arrangements side by side:
         - **Permutations vs Combinations**
-        - **With vs Without Repetition**
+        - **Finite vs Infinite Deck (Without/With Repetition)**
 
         Adjust the parameters below to explore different scenarios.
         """)
@@ -587,11 +680,19 @@ def main():
         cards_compare = create_deck(n_compare)
 
         st.write("### Available Cards for Comparison")
-        # Create colored card display for comparison view
         card_html = ""
         for card in cards_compare:
             color_class = "red-card" if card.suit in ['♥', '♦'] else "black-card"
             card_html += f'<span class="{color_class}">{str(card)} </span>'
+
+        st.markdown("""
+                <div class="deck-info">
+                    <div class="note-text">
+                        <strong>📝 Important Note:</strong> In arrangements with repetition, we draw from an infinite 
+                        deck i.e. we have infinitely many cards of the below kind <span class="infinity-symbol">∞</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
         st.markdown(f"""
         <div class="card-display">
@@ -613,18 +714,18 @@ def main():
 
             **Permutations (Top Row)**
             - Order matters (ABC ≠ CBA)
-            - Left: No repetition allowed
-            - Right: Repetition allowed
+            - Left: Finite deck (no repetition)
+            - Right: Infinite deck (with repetition)
 
             **Combinations (Bottom Row)**
             - Order doesn't matter (ABC = CBA)
-            - Left: No repetition allowed
-            - Right: Repetition allowed
+            - Left: Finite deck (no repetition)
+            - Right: Infinite deck (with repetition)
 
             ### Tips
             - Start with small numbers (n=2, r=2) to understand the patterns
-            - Compare the number of arrangements across different types
-            - Notice how allowing repetition affects the total number of possibilities
+            - Compare arrangements between finite and infinite decks
+            - Notice how having an infinite deck affects possibilities
             """)
 
 
